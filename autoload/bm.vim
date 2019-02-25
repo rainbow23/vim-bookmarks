@@ -130,17 +130,20 @@ endfunction
 function! bm#location_list()
   let files = sort(bm#all_files())
   let locations = []
+  let currfilefullpath = expand('%:p')
   for file in files
-    let line_nrs = sort(bm#all_lines(file), "bm#compare_lines")
-    for line_nr in line_nrs
-      let bookmark = bm#get_bookmark_by_line(file, line_nr)
-      let content = bookmark['annotation'] !=# ''
-            \ ? "Annotation: ". bookmark['annotation']
-            \ : (bookmark['content'] !=# ""
-            \   ? bookmark['content']
-            \   : "empty line")
-      call add(locations, file .":". line_nr .":". content)
-    endfor
+    if(currfilefullpath == file)
+        let line_nrs = sort(bm#all_lines(file), "bm#compare_lines")
+        for line_nr in line_nrs
+          let bookmark = bm#get_bookmark_by_line(file, line_nr)
+          let content = bookmark['annotation'] !=# ''
+                \ ? "Annotation: ". bookmark['annotation']
+                \ : (bookmark['content'] !=# ""
+                \   ? bookmark['content']
+                \   : "empty line")
+          call add(locations, file .":". line_nr .":". content)
+        endfor
+    endif
   endfor
   return locations
 endfunction
