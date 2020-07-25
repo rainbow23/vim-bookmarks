@@ -121,12 +121,14 @@ function! fzf#bookmarks#open(line)
     execute "normal! ".lnr."gg"
 endfunction
 
+" a:preview = 1 現在開いているファイルのみ対象
+" a:preview = 3 git管理しているファイルが対象
 function! fzf#bookmarks#list(preview)
     """Show a list of current bookmarks."""
 
     let list = [] | let s:preview = a:preview
 
-    for b in bm#location_list()
+    for b in bm#location_list(a:preview)
         let line = s:format_line(b)
         if line != '' | call add(list, line) | endif
     endfor

@@ -127,12 +127,10 @@ function! bm#all_lines(file)
   return keys(g:line_map[a:file])
 endfunction
 
-function! bm#location_list()
-  let files = sort(bm#all_files())
+function! bm#location_list(preview)
   let locations = []
-  let currfilefullpath = expand('%:p')
-  for file in files
-    if(currfilefullpath == file)
+
+  for file in bm#filter_list(a:preview)
         let line_nrs = sort(bm#all_lines(file), "bm#compare_lines")
         for line_nr in line_nrs
           let bookmark = bm#get_bookmark_by_line(file, line_nr)
@@ -143,10 +141,58 @@ function! bm#location_list()
                 \   : "empty line")
           call add(locations, file .":". line_nr .":". content)
         endfor
-    endif
   endfor
   return locations
 endfunction
+
+function! bm#filter_list(preview)
+  let files = sort(bm#all_files())
+  let previewFileList = []
+
+  for file in files
+    " a:preview = 1 現在開いているファイルのみ対象
+    if a:bang == 1
+      let currfilefullpath = expand('%:p')
+      if(currfilefullpath == file)
+        add(previewFileList, currfilefullpath)
+        break
+      endif
+
+    " a:preview = 3 git管理しているファイルが対象
+    elseif a:bang == 3
+      let rootGitPathWords = split(MoshGitPath(),"/")
+      let bmPathWords      = split(file,"/")
+      let isMatchWord      = 1
+
+      for i in len(rootGitPathWords)
+        " パスの単語が一致しない場合、
+        " 現在開いているファイルのgit管理外なのでプレビュー煮含めない
+        isMatchWord = match("^" . rootGitPathWords[i], bmPathWords[i])
+
+        if isMatchWord  == 0
+            break
+        endif
+      endfor
+
+      if isMatchWord  == 0
+        break
+      endif
+
+      add(previewFileList, file)
+    else
+      add(previewFileList, file)
+    endif
+  endfor
+endfunction
+
+" https://stackoverflow.com/questions/30171512/how-to-set-the-root-of-git-repository-to-vi-vim-find-path
+function! MoshGitPath()
+  let g:gitdir=substitute(system("git rev-parse --show-toplevel 2>&1 | grep -v fatal:"),'\n','','g')
+  if  g:gitdir != '' && isdirectory(g:gitdir) && index(split(&path, ","),g:gitdir) < 0
+      echo g:gitdir
+  endif
+endfunction
+" command! MoshGitPath :call MoshGitPath()
 
 function! bm#all_files()
   return keys(g:line_map)

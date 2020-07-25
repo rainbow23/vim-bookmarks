@@ -314,10 +314,13 @@ fun! s:fzf_args(bang)
         \ 'source': fzf#bookmarks#list(a:bang),
         \ 'sink': function('fzf#bookmarks#open'),
         \ 'options': '--prompt "Bookmarks  >>>  "'}
-  if a:bang
+
+  " a:bang = 1 現在開いているファイルのみ対象
+  " a:bang = 3 git管理しているファイルが対象
+  if a:bang == 1 || a:bang == 3
     let p = g:bookmark_fzf_preview_layout
     let args[p[0]] = p[1]
-  else
+  elseif a:bang == 0 || a:bang == 2
     let args['down'] = '30%'
   endif
   return args
@@ -327,6 +330,9 @@ command! -bang -nargs=? -complete=buffer FzfBookmarks call fzf#vim#ag(<q-args>,
   \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(1))
   \                         : s:fzf_args(0))
 
+command! -bang -nargs=? -complete=buffer FzfRootDirBookmarks call fzf#vim#ag(<q-args>,
+  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(3))
+  \                         : s:fzf_args(2))
 
 " }}}
 
