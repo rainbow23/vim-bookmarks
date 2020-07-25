@@ -309,30 +309,36 @@ command! -nargs=? BookmarkMoveUp call s:move_relative(<q-args>, -1)
 command! -nargs=? BookmarkMoveDown call s:move_relative(<q-args>, 1)
 command! -nargs=? BookmarkMoveToLine call s:move_absolute(<q-args>)
 
-fun! s:fzf_args(bang)
-  let args =  {
-        \ 'source': fzf#bookmarks#list(a:bang),
+fun! s:fzf_args(previewKind, promptMsg)
+  let prompt = '--prompt  "' . a:promptMsg . '  >>>  "'
+  let args = {
+        \ 'source': fzf#bookmarks#list(abs(a:previewKind)),
         \ 'sink': function('fzf#bookmarks#open'),
-        \ 'options': '--prompt "Bookmarks  >>>  "'}
+        \ 'options': prompt}
 
-  " a:bang = 1 現在開いているファイルのみ対象
-  " a:bang = 3 git管理しているファイルが対象
-  if a:bang == 1 || a:bang == 3
+  if a:previewKind > 0
     let p = g:bookmark_fzf_preview_layout
     let args[p[0]] = p[1]
-  elseif a:bang == 0 || a:bang == 2
+  else
     let args['down'] = '30%'
   endif
   return args
 endfun
 
-command! -bang -nargs=? -complete=buffer FzfBookmarks call fzf#vim#ag(<q-args>, 
-  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(1))
-  \                         : s:fzf_args(0))
+" s:fzf_args = 1 全てのファイルをリストにする
+" s:fzf_args = 2 現在開いているファイルのみ対象
+" s:fzf_args = 3 git管理しているファイルが対象
+command! -bang -nargs=? -complete=buffer FzfAllBookmarks call fzf#vim#ag(<q-args>, 
+  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(1, "FzfAllBookmarks"))
+  \                         : s:fzf_args(-1, "FzfAllBookmarks"))
 
-command! -bang -nargs=? -complete=buffer FzfRootDirBookmarks call fzf#vim#ag(<q-args>,
-  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(3))
-  \                         : s:fzf_args(2))
+command! -bang -nargs=? -complete=buffer FzfCurrFileBookmarks call fzf#vim#ag(<q-args>, 
+  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(2, "FzfCurrFileBookmarks"))
+  \                         : s:fzf_args(-2, "FzfCurrFileBookmarks"))
+
+command! -bang -nargs=? -complete=buffer FzfGitRootDirBookmarks call fzf#vim#ag(<q-args>,
+  \                 <bang>0 ? fzf#vim#with_preview(s:fzf_args(3, "FzfGitRootDirBookmarks"))
+  \                         : s:fzf_args(-3, "FzfGitRootDirBookmarks"))
 
 " }}}
 
