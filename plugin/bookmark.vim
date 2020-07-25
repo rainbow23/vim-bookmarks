@@ -310,7 +310,7 @@ command! -nargs=? BookmarkMoveDown call s:move_relative(<q-args>, 1)
 command! -nargs=? BookmarkMoveToLine call s:move_absolute(<q-args>)
 
 fun! s:fzf_args(previewKind, promptMsg)
-  let prompt = '--prompt  "' . a:promptMsg . '  >>>  "'
+  let prompt = '--prompt  "' . a:promptMsg . '  >>>  "' . ' --preview-window down:10'
   let args = {
         \ 'source': fzf#bookmarks#list(abs(a:previewKind)),
         \ 'sink': function('fzf#bookmarks#open'),
