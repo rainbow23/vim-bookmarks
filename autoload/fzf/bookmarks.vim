@@ -128,10 +128,62 @@ function! fzf#bookmarks#list(preview)
 
     let list = [] | let s:preview = a:preview
 
-    for b in bm#location_list(a:preview)
+    for b in bm#location_list()
+      " echo b
+      " /Users/goodscientist1023/dotfiles/_vimrc:1:Annotation: one
+
+      let path = split(b,":")
+      " /Users/goodscientist1023/dotfiles/_vimrc
+
+      let line  = ""
+
+      "  a:preview = 1 全てのファイルをリストにする
+      if a:preview == 1
         let line = s:format_line(b)
-        if line != '' | call add(list, line) | endif
+
+      " a:preview = 2 現在開いているファイルのみ対象
+      elseif a:preview == 2
+        let path             = split(b,":")
+        let currfilefullpath = expand('%:p')
+        if(currfilefullpath == path[0])
+          let line = s:format_line(b)
+        endif
+
+      " a:preview = 3 git管理しているファイルが対象
+      elseif a:preview == 3
+        let path             = split(b,":")
+        let bmPathWords      = split(path[0],"/")
+        let rootGitPathWords = split(MoshGitPath(),"/")
+        let isMatchWord      = 0
+        let index            = 0
+
+        while index < len(rootGitPathWords)
+          " パスの単語が一致する場合、
+          " 現在開いているファイルのgit管理なのでプレビューに含める
+          if match("^" . rootGitPathWords[index], bmPathWords[index]) == 1
+            let isMatchWord = 1
+          else
+            let isMatchWord = 0
+            break
+          endif
+          let index += 1
+        endwhile
+
+        if isMatchWord  == 1
+          let line = s:format_line(b)
+        endif
+      endif
+
+      if line != '' | call add(list, line) | endif
     endfor
     return list
+endfunction
+
+" https://stackoverflow.com/questions/30171512/how-to-set-the-root-of-git-repository-to-vi-vim-find-path
+function! MoshGitPath()
+  let g:gitdir=substitute(system("git rev-parse --show-toplevel 2>&1 | grep -v fatal:"),'\n','','g')
+  if  g:gitdir != '' && isdirectory(g:gitdir) && index(split(&path, ","),g:gitdir) < 0
+    return g:gitdir
+  endif
 endfunction
 

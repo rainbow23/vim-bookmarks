@@ -127,17 +127,10 @@ function! bm#all_lines(file)
   return keys(g:line_map[a:file])
 endfunction
 
-command! -nargs=? Hi call bm#location_list((<f-args>)
-function! bm#location_list(...)
+function! bm#location_list()
+  let files = sort(bm#all_files())
   let locations = []
-  let arg = -1
-
-  " 引数があればargに代入する
-  if a:0 >=1
-    let arg = a:1
-  endif
-
-  for file in bm#filter_list(arg)
+  for file in files
         let line_nrs = sort(bm#all_lines(file), "bm#compare_lines")
         for line_nr in line_nrs
           let bookmark = bm#get_bookmark_by_line(file, line_nr)
