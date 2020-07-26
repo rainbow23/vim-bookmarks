@@ -153,20 +153,19 @@ function! fzf#bookmarks#list(preview)
       elseif a:preview == 3
         let path             = split(b,":")
         let bmPathWords      = split(path[0],"/")
-        let rootGitPathWords = split(MoshGitPath(),"/")
         let isMatchWord      = 0
         let index            = 0
+        let gitRootRelativePath = GitRelativePath()
+        let index = len(bmPathWords) -1
 
-        while index < len(rootGitPathWords)
+        while index >= 0
           " パスの単語が一致する場合、
           " 現在開いているファイルのgit管理なのでプレビューに含める
-          if match("^" . rootGitPathWords[index], bmPathWords[index]) == 1
+          if match("^" . gitRootRelativePath, bmPathWords[index]) == 1
             let isMatchWord = 1
-          else
-            let isMatchWord = 0
             break
           endif
-          let index += 1
+          let index -= 1
         endwhile
 
         if isMatchWord  == 1
@@ -180,10 +179,12 @@ function! fzf#bookmarks#list(preview)
 endfunction
 
 " https://stackoverflow.com/questions/30171512/how-to-set-the-root-of-git-repository-to-vi-vim-find-path
-function! MoshGitPath()
+function! GitRelativePath()
   let g:gitdir=substitute(system("git rev-parse --show-toplevel 2>&1 | grep -v fatal:"),'\n','','g')
   if  g:gitdir != '' && isdirectory(g:gitdir) && index(split(&path, ","),g:gitdir) < 0
-    return g:gitdir
+
+    let dir = split(g:gitdir,"/")
+    return dir[len(dir) - 1]
   endif
 endfunction
 
